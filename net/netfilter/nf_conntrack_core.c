@@ -63,6 +63,8 @@
 // SEC_PRODUCT_FEATURE_KNOX_SUPPORT_NPA }
 #endif
 
+#include "nf_internals.h"
+
 __cacheline_aligned_in_smp spinlock_t nf_conntrack_locks[CONNTRACK_LOCKS];
 EXPORT_SYMBOL_GPL(nf_conntrack_locks);
 
