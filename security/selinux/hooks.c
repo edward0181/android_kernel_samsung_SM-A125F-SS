@@ -111,8 +111,10 @@ static int selinux_enforcing_boot;
 static int __init enforcing_setup(char *str)
 {
 	unsigned long enforcing;
-	if (!kstrtoul(str, 0, &enforcing))
+	if (!kstrtoul(str, 0, &enforcing)) {
 		selinux_enforcing_boot = enforcing ? 1 : 0;
+		selinux_enforcing = enforcing ? 1 : 0;
+	}
 	return 1;
 }
 __setup("enforcing=", enforcing_setup);
@@ -127,7 +129,9 @@ static int __init selinux_enabled_setup(char *str)
 {
 	unsigned long enabled;
 	if (!kstrtoul(str, 0, &enabled))
+	{
 		selinux_enabled = enabled ? 1 : 0;
+	}
 	return 1;
 }
 __setup("selinux=", selinux_enabled_setup);
@@ -7424,7 +7428,6 @@ static struct pernet_operations selinux_net_ops = {
 static int __init selinux_nf_ip_init(void)
 {
 	int err;
-
 	if (!selinux_enabled)
 		return 0;
 
