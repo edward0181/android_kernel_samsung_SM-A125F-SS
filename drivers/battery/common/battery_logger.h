@@ -19,9 +19,36 @@
 #ifndef __BATTERY_LOGGER_H
 #define __BATTERY_LOGGER_H __FILE__
 
-extern void store_battery_log(const char *fmt, ...);
-extern int register_batterylog_proc(void);
-extern void unregister_batterylog_proc(void);
-extern unsigned int lpcharge;
+#include <uapi/linux/usb/f_mtp.h>
+#include <linux/ioctl.h>
+#ifdef CONFIG_COMPAT
+#include <linux/compat.h>
+#endif
 
-#endif /* __BATTERY_LOGGER_H */
+#ifdef __KERNEL__
+
+#ifdef CONFIG_COMPAT
+struct __compat_mtp_file_range {
+	compat_int_t	fd;
+	compat_loff_t	offset;
+	int64_t		length;
+	uint16_t	command;
+	uint32_t	transaction_id;
+};
+
+struct __compat_mtp_event {
+	compat_size_t	length;
+	compat_caddr_t	data;
+};
+
+#define COMPAT_MTP_SEND_FILE              _IOW('M', 0, \
+						struct __compat_mtp_file_range)
+#define COMPAT_MTP_RECEIVE_FILE           _IOW('M', 1, \
+						struct __compat_mtp_file_range)
+#define COMPAT_MTP_SEND_EVENT             _IOW('M', 3, \
+						struct __compat_mtp_event)
+#define COMPAT_MTP_SEND_FILE_WITH_HEADER  _IOW('M', 4, \
+						struct __compat_mtp_file_range)
+#endif
+#endif
+#endif /* __LINUX_USB_F_MTP_H */
