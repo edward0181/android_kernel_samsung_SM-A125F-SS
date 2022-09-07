@@ -4,6 +4,7 @@ export CROSS_COMPILE=/home/edward/toolchains/proton-clang-13-clang/bin/aarch64-l
 export CC=/home/edward/toolchains/proton-clang-13-clang/bin/clang
 export CLANG_TRIPLE=/home/edward/toolchains/proton-clang-13-clang/bin/aarch64-linux-gnu-
 export ARCH=arm64
+export PLATFORM_VERSION=12
 export ANDROID_MAJOR_VERSION=s
 
 export KCFLAGS=-w
