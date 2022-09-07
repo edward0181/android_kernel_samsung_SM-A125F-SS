@@ -320,7 +320,7 @@ include scripts/subarch.include
 # Default value for CROSS_COMPILE is not to prefix executables
 # Note: Some architectures assign CROSS_COMPILE in their arch/*/Makefile
 ARCH            ?= arm64
-CROSS_COMPILE   ?= $(srctree)/toolchain/clang/host/linux-x86/clang-r383902/bin/aarch64-linux-gnu-
+CROSS_COMPILE   ?= $(CONFIG_CROSS_COMPILE:"%"=%)
 
 # Architecture as present in compile.h
 UTS_MACHINE 	:= $(ARCH)
@@ -377,24 +377,28 @@ KBUILD_HOSTLDLIBS   := $(HOST_LFS_LIBS) $(HOSTLDLIBS)
 CPP		= $(CC) -E
 ifneq ($(LLVM),)
 CC		= clang
+CXX		= clang++
 LD		= ld.lld
+LLD		= lld
 AR		= llvm-ar
 NM		= llvm-nm
-OBJCOPY		= llvm-objcopy
-OBJDUMP		= llvm-objdump
-READELF		= llvm-readelf
-OBJSIZE		= llvm-size
-STRIP		= llvm-strip
+OBJCOPY	= llvm-objcopy
+OBJDUMP	= llvm-objdump
+READELF	= llvm-readelf
+STRIP	= llvm-strip
+AS		= llvm-as
+OBJSIZE = llvm-size
 else
-CC		= $(srctree)/toolchain/clang/host/linux-x86/clang-r383902/bin/clang
+AS		= $(CROSS_COMPILE)as
 LD		= $(CROSS_COMPILE)ld
+CC		= /home/edward/toolchains/proton-clang-13-clang/bin/clang
+#CC		= $(srctree)/toolchain/clang/host/linux-x86/clang-r383902/bin/clang
+CPP		= $(CC) -E
 AR		= $(CROSS_COMPILE)ar
 NM		= $(CROSS_COMPILE)nm
-OBJCOPY		= $(CROSS_COMPILE)objcopy
-OBJDUMP		= $(CROSS_COMPILE)objdump
-READELF		= $(CROSS_COMPILE)readelf
-OBJSIZE		= $(CROSS_COMPILE)size
-STRIP		= $(CROSS_COMPILE)strip
+STRIP	= $(CROSS_COMPILE)strip
+OBJCOPY	= $(CROSS_COMPILE)objcopy
+OBJDUMP	= $(CROSS_COMPILE)objdump
 endif
 LEX		= flex
 YACC		= bison
@@ -689,6 +693,44 @@ KBUILD_CFLAGS   += -Os
 else
 KBUILD_CFLAGS   += -O2
 endif
+
+ifeq ($(cc-name),clang)
+# Add Some optimization flags for clang
+KBUILD_CFLAGS	+= -mcpu=cortex-a53 \
+-pipe \
+-ffunction-sections \
+-ffp-model=fast -foptimize-sibling-calls
+
+# Enable Clang Polly optimizations
+KBUILD_CFLAGS	+= -mllvm -polly \
+                   -mllvm -polly-use-runtime-alias-checks \
+                   -mllvm -polly-detect-track-failures \
+                   -mllvm -polly-optimized-scops \
+                   -mllvm -polly-import-jscop-dir \
+                   -mllvm -polly-run-export-jscop \
+                   -mllvm -polly-use-llvm-names \
+                   -mllvm -polly-omp-backend=LLVM \
+                   -mllvm -polly-delicm-max-ops=0 \
+                   -mllvm -polly-2nd-level-tiling \
+                   -mllvm -polly-position=early \
+                   -mllvm -polly-position=before-vectorizer \
+                   -mllvm -polly-num-threads=8 \
+                   -mllvm -polly-scheduling=dynamic \
+                   -mllvm -polly-scheduling-chunksize=1 \
+                   -mllvm -polly-vectorizer=polly \
+                   -mllvm -polly-opt-maximize-bands=yes \
+                   -mllvm -polly-ast-use-context \
+                   -mllvm -polly-detect-keep-going \
+		   -mllvm -polly-invariant-load-hoisting \
+		   -mllvm -polly-run-dce \
+		   -mllvm -polly-run-inliner \
+		   -mllvm -polly-vectorizer=stripmine \
+		   -mllvm -polly-opt-simplify-deps=no \
+		   -mllvm -polly-rtc-max-arrays-per-group=40 \
+		   -mllvm -polly-parallel \
+			 -mllvm -polly-ast-detect-parallel
+                          #-mllvm -polly-no-early-exit
+endif                          
 
 # Tell gcc to never replace conditional load with a non-conditional one
 KBUILD_CFLAGS	+= $(call cc-option,--param=allow-store-data-races=0)
